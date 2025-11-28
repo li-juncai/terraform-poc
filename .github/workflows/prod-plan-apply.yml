@@ -1,43 +1,30 @@
-
-name: Production Environment Plan & Apply
+name: Test Environment Plan
 on:
-  repository_dispatch:
-    types: [move-to-prod]
+  pull_request:
+    paths:
+      - 'environments/test/**'
+      - 'modules/alicloud-role/**'
+
 jobs:
-  plan-and-apply:
+  plan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.7.0
-      - name: Download Test Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: test-plan
-          path: environments/production
-      - name: Move Code (Simulated)
-        run: |
-          # 实际场景中替换为真实移动逻辑
-          echo "Simulating code movement from test to production..."
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
       - name: Terraform Init
-        run: terraform -chdir=environments/production init
+        run: |
+          terraform init -backend-config=backend-config/backend.hcl \
+            -backend-config="organization=your-github-org" \
+            -backend-config="workspaces.name=terraform-state-${{ github.repository }}"
+        working-directory: environments/test
       - name: Terraform Plan
-        run: terraform -chdir=environments/production plan -out=tfplan
-      - name: Approval Check
-        uses: actions/github-script@v7
-        env:
-          PLAN: "environments/production/tfplan"
+        run: terraform plan -out=tfplan
+        working-directory: environments/test
+      - name: Upload Plan Artifact
+        uses: actions/upload-artifact@v4
         with:
-          script: |
-            const fs = require('fs');
-            const plan = fs.readFileSync(process.env.PLAN, 'utf8');
-            if (plan.includes('No changes.')) {
-              console.log('No changes to apply');
-              process.exit(0);
-            }
-            // 实际场景中添加人工审批逻辑
-            core.setOutput('requires_approval', true);
-      - name: Terraform Apply
-        if: ${{ success() }}
-        run: terraform -chdir=environments/production apply tfplan
+          name: tfplan-test
+          path: environments/test/tfplan
