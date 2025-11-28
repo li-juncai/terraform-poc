@@ -1,1 +1,14 @@
 
+workspace {
+  name = "workspace-1-1"
+}
+
+remote_state {
+  backend = "remote"
+  config = {
+    organization = "ljc-test-1"  # GitHub组织名
+    workspaces {
+      name = "terraform-state-${github.repository}"  # 动态工作区名
+    }
+  }
+}
