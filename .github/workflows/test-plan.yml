@@ -17,9 +17,10 @@ jobs:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
       - name: Terraform Init
         run: |
-          terraform init -backend-config=backend-config/backend.hcl \
+          terraform init \
+            -backend-config="../backend-config/backend.hcl" \  # 修正路径
             -backend-config="organization=your-github-org" \
-            -backend-config="workspaces.name=terraform-state-${{ github.repository }}"
+            -backend-config="workspaces[name]=terraform-state-${{ github.repository }}"  # 修正参数格式
         working-directory: environments/test
       - name: Terraform Plan
         run: terraform plan -out=tfplan
