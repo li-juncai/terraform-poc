@@ -1,9 +1,15 @@
-module "test_role" {
-  source     = "../../modules/role"
-  role_name  = "test-role-${random_string.suffix.result}"
+terraform {
+  backend "remote" {
+    # 动态加载backend.hcl配置
+    # 实际需通过-backend-config=../backend-config/backend.hcl传递
+  }
 }
 
-resource "random_string" "suffix" {
-  length  = 6
-  special = false
+module "test_role" {
+  source = "../../modules/alicloud-role"
+  # 可添加测试环境特定参数
+}
+
+output "test_role_arn" {
+  value = module.test_role.role_arn
 }
