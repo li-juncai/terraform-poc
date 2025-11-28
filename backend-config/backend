@@ -1,0 +1,13 @@
+workspace {
+  name = "github-backend"
+}
+
+remote_state {
+  backend = "remote"
+  config = {
+    organization = "terraform-poc"  # GitHub组织名
+    workspaces {
+      name = "terraform-state-${github.repository}"  # 动态工作区名
+    }
+  }
+}
