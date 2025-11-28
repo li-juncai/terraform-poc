@@ -4,6 +4,7 @@ on:
     paths:
       - 'environments/test/**'
       - 'modules/alicloud-role/**'
+    branches: [ main ]          # 仅针对main分支的PR
 
 jobs:
   plan:
