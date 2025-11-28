@@ -1,11 +1,11 @@
 workspace {
-  name = "github-backend"
+  name = "workspace-1-1"
 }
 
 remote_state {
   backend = "remote"
   config = {
-    organization = "terraform-poc"  # GitHub组织名
+    organization = "ljc-test-1"  # GitHub组织名
     workspaces {
       name = "terraform-state-${github.repository}"  # 动态工作区名
     }
