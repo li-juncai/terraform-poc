@@ -1,1 +1,43 @@
 
+name: Production Environment Plan & Apply
+on:
+  repository_dispatch:
+    types: [move-to-prod]
+jobs:
+  plan-and-apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.0
+      - name: Download Test Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: test-plan
+          path: environments/production
+      - name: Move Code (Simulated)
+        run: |
+          # 实际场景中替换为真实移动逻辑
+          echo "Simulating code movement from test to production..."
+      - name: Terraform Init
+        run: terraform -chdir=environments/production init
+      - name: Terraform Plan
+        run: terraform -chdir=environments/production plan -out=tfplan
+      - name: Approval Check
+        uses: actions/github-script@v7
+        env:
+          PLAN: "environments/production/tfplan"
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync(process.env.PLAN, 'utf8');
+            if (plan.includes('No changes.')) {
+              console.log('No changes to apply');
+              process.exit(0);
+            }
+            // 实际场景中添加人工审批逻辑
+            core.setOutput('requires_approval', true);
+      - name: Terraform Apply
+        if: ${{ success() }}
+        run: terraform -chdir=environments/production apply tfplan
