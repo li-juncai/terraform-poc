@@ -1,21 +1,20 @@
-
-resource "alicloud_ram_role" "new_role" {
-  name        = var.role_name
-  description  = "Terraform-managed role with no permissions"
-  force       = true
+resource "alicloud_ram_role" "example" {
+  name        = "tf-github-flow-role"
+  description  = "Created by Terraform GitHub Flow"
+  document     = <<EOF
+{
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Effect": "Allow",
+    "Principal": {
+      "Service": ["ecs.aliyuncs.com"]  # 示例：ECS服务角色
+    }
+  }]
+}
+EOF
+  force       = true  # 覆盖已存在角色
 }
 
-resource "alicloud_ram_policy" "empty_policy" {
-  name        = "${var.role_name}-empty-policy"
-  description  = "Empty policy for initial role"
-  policy_document = jsonencode({
-    Version   = "1"
-    Statement = []
-  })
-}
-
-resource "alicloud_ram_role_policy_attachment" "attach_empty" {
-  role_name   = alicloud_ram_role.new_role.name
-  policy_name = alicloud_ram_policy.empty_policy.name
-  policy_type = "Custom"
+output "role_arn" {
+  value = alicloud_ram_role.example.arn
 }
