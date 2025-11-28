@@ -1,15 +1,26 @@
 terraform {
-  backend "remote" {
-    # 动态加载backend.hcl配置
-    # 实际需通过-backend-config=../backend-config/backend.hcl传递
+  required_providers {
+     alicloud = {
+       source  = "aliyun/alicloud"
+       version = "~> 1.200"
+     }
   }
+  backend "remote" {  # 使用Terraform Cloud/Enterprise远程状态存储
+     organization = "ljc-test-1"
+     workspaces {
+       name = "workspace-1-1"
+     }
+   }
 }
 
-module "test_role" {
-  source = "../../modules/alicloud-role"
-  # 可添加测试环境特定参数
+provider "alicloud" {
+  access_key = var.access_key
+  secret_key = var.secret_key
+  region     = "cn-shanghai"
 }
 
-output "test_role_arn" {
-  value = module.test_role.role_arn
+resource "alicloud_ram_role" "example" {
+  name        = "tf-test-role"
+  description  = "Created by Terraform GitHub Actions"
+  force       = true
 }
