@@ -1,32 +1,30 @@
-
 name: Test Environment Plan
 on:
-  push:
+  pull_request:
     paths:
       - 'environments/test/**'
+      - 'modules/alicloud-role/**'
+
 jobs:
   plan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.7.0
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
       - name: Terraform Init
-        run: terraform -chdir=environments/test init
+        run: |
+          terraform init -backend-config=backend-config/backend.hcl \
+            -backend-config="organization=your-github-org" \
+            -backend-config="workspaces.name=terraform-state-${{ github.repository }}"
+        working-directory: environments/test
       - name: Terraform Plan
-        run: terraform -chdir=environments/test plan -out=tfplan
+        run: terraform plan -out=tfplan
+        working-directory: environments/test
       - name: Upload Plan Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: test-plan
+          name: tfplan-test
           path: environments/test/tfplan
-      - name: Create Approval Comment
-        uses: peter-evans/create-or-update-comment@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            🔍 **Test Plan Complete**
-            [View Plan Details](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            ✅ **Approve to move to production**
